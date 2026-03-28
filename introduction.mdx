@@ -1,0 +1,64 @@
+---
+title: "Introduction"
+description: "Malimite is an open-source iOS and macOS decompiler that helps researchers analyze IPA files and Application Bundles using Ghidra's decompilation engine."
+---
+
+Malimite is an iOS and macOS decompiler built on top of Ghidra. It gives security researchers and reverse engineers a purpose-built interface for analyzing Swift and Objective-C binaries, automatically decoding Apple-specific resources, and accelerating analysis with built-in LLM integration — all from a single cross-platform desktop application.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Cross-platform" icon="display">
+    Runs on macOS, Windows, and Linux. A single JAR file covers all platforms with no platform-specific builds required.
+  </Card>
+  <Card title="IPA and App Bundle support" icon="file-zipper">
+    Open `.ipa` files and `.app` bundles directly. Malimite unpacks, locates the Mach-O executable, and sends it through the analysis pipeline automatically.
+  </Card>
+  <Card title="Swift class reconstruction" icon="code">
+    Reconstructs Swift class hierarchies by demangling mangled symbols, giving you a navigable class and function tree instead of raw symbol names.
+  </Card>
+  <Card title="Resource decoding" icon="image">
+    Automatically decodes iOS and macOS resources including Info.plist files, assets, and provisioning profiles so you can inspect them alongside decompiled code.
+  </Card>
+  <Card title="Built-in LLM translation" icon="robot">
+    Send decompiled methods directly to OpenAI or a locally hosted model. Translate obfuscated code into readable summaries, find potential vulnerabilities, or get a plain-English description — without leaving the tool.
+  </Card>
+  <Card title="Library filtering" icon="filter">
+    Automatically skips decompilation of known Apple framework namespaces so results focus on app-specific logic. Customize the filter list to add or remove libraries.
+  </Card>
+</CardGroup>
+
+## How it works
+
+Malimite uses Ghidra's headless analyzer (`analyzeHeadless`) as its decompilation backend. When you open a file, Malimite:
+
+1. **Extracts the binary** — unpacks the IPA or App Bundle and locates the Mach-O executable inside.
+2. **Invokes Ghidra headlessly** — launches `analyzeHeadless` as a subprocess, passing the binary and a custom Ghidra script (`DumpClassData.java`) that runs inside the Ghidra process.
+3. **Streams results via socket** — the Ghidra script connects back to Malimite over a local socket and sends class data, Mach-O segment data, decompiled function code, and extracted strings as JSON.
+4. **Stores results in SQLite** — all analysis output is written to a local SQLite database (a `_malimite/project.json`-anchored project directory next to the original file), so subsequent opens are instant without re-running Ghidra.
+5. **Presents a navigable UI** — the class tree, decompiled code viewer, resource panel, and LLM integration are all populated from the stored project data.
+
+Library namespaces are filtered during decompilation: functions whose parent namespace matches a known Apple framework prefix are recorded without running the decompiler, keeping analysis fast.
+
+## Supported platforms
+
+Malimite runs on the following operating systems:
+
+| Platform | Supported |
+| -------- | --------- |
+| macOS    | Yes       |
+| Windows  | Yes       |
+| Linux    | Yes       |
+
+All three platforms require Java 11 or later and a local Ghidra installation. On macOS, Malimite integrates with system appearance settings and the dock icon automatically.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install Malimite via Homebrew or as a precompiled JAR, and configure the Ghidra path.
+  </Card>
+  <Card title="Analyzing apps" icon="magnifying-glass" href="/guides/analyzing-apps">
+    Open an IPA file or App Bundle and navigate the decompiled output.
+  </Card>
+</CardGroup>

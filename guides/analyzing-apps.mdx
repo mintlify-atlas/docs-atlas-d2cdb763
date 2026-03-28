@@ -1,0 +1,121 @@
+---
+title: "Analyzing apps"
+description: "How to open and analyze an IPA or App Bundle in Malimite."
+---
+
+Malimite accepts iOS and macOS app packages in two formats: IPA files (`.ipa`) and app bundles (`.app` directories). Once opened, Malimite extracts the Mach-O executable, runs Ghidra analysis, and presents the decompiled output in an interactive window.
+
+## Opening a file
+
+You can load a file in two ways:
+
+- **Drag and drop** — drag an `.ipa` or `.app` file onto the file path field in the main window.
+- **Select File button** — click **Select File** to open a file picker, then navigate to your target.
+
+After selecting a file, click **Analyze File** to begin.
+
+<Note>
+Malimite requires a valid Ghidra installation to run analysis. If the Ghidra path has not been configured, a prompt will appear offering to open Preferences. Set the path there before proceeding.
+</Note>
+
+## Universal Mach-O binaries
+
+When Malimite detects a Universal (fat) binary — one that contains slices for multiple CPU architectures — an architecture selection dialog appears before analysis begins. Select the slice you want to decompile (for example, `ARM64` or `Intel x86_64`) and Malimite will extract and analyze that specific slice.
+
+Supported architecture types include:
+
+| Architecture | CPU type |
+|---|---|
+| Intel x86 | `0x00000007` |
+| Intel x86_64 | `0x01000007` |
+| ARM | `0x0000000C` |
+| ARM64 | `0x0100000C` |
+
+## The analysis workflow
+
+<Steps>
+  <Step title="Select your file">
+    Drag an `.ipa` or `.app` file onto the main window, or use the **Select File** button to browse to it.
+  </Step>
+  <Step title="Analyze the file">
+    Click **Analyze File**. Malimite extracts the Mach-O executable, initializes a Ghidra project, and begins decompilation. A progress dialog shows Ghidra's output; you can expand it to see the full processing log.
+  </Step>
+  <Step title="Choose an architecture (fat binaries only)">
+    If a Universal binary is detected, select the architecture you want to analyze and confirm. Malimite extracts the corresponding slice before proceeding.
+  </Step>
+  <Step title="Explore the analysis window">
+    Once analysis completes, the analysis window opens. The left panel shows the file tree; the right panel shows decompiled code for the selected item.
+  </Step>
+</Steps>
+
+## The analysis window
+
+The analysis window has two main panels:
+
+- **Left panel** — a tree view with two root nodes:
+  - **Classes** — all classes and their functions extracted from the Mach-O executable, sorted alphabetically. A **Libraries** node groups any classes that match the configured library prefixes.
+  - **Files** — the full contents of the IPA or app bundle, mirroring the archive structure.
+- **Right panel** — a syntax-highlighted code view that displays the decompiled output or file content for whatever is selected in the tree.
+
+A status bar at the bottom of the window shows the bundle identifier detected from `Info.plist`.
+
+## Navigating classes and functions
+
+Click any node in the **Classes** tree to load its content in the right panel:
+
+- **Class node** — loads the decompiled representation of the entire class.
+- **Function node** — loads the decompiled code for that individual function and sets it as the active context for AI actions and cross-reference lookups.
+
+Double-clicking a leaf node opens it in a new tab in the right panel. Tabs let you keep multiple files open at once and switch between them without re-selecting from the tree.
+
+### Editing a function
+
+Right-click a function node in the **Classes** tree and choose **Edit function**, or select a function node and use **File → Edit Function** (`Ctrl+E`). You must have a function node selected (not a class node) for this to activate. The code area becomes editable. Click **Save Changes** when done.
+
+### Decompiling individual files
+
+Right-click any leaf node in the **Files** tree and choose **Decompile** to run Ghidra decompilation on that specific file on demand.
+
+## Searching
+
+Malimite provides two search mechanisms:
+
+### In-file search
+
+Open the in-file search bar with **Windows → Search** (`Cmd+F` on macOS, `Ctrl+F` on other platforms). The search bar appears above the code viewer. Type a term to highlight all matches in the current file and step through them with the previous/next buttons.
+
+### Search in code
+
+Use **Windows → Search in Code** (`Ctrl+H`) to search across the entire analyzed codebase. Enter a variable name, method name, or class name and Malimite opens a results dialog with columns for **Type**, **Name**, **Location**, and **Line**.
+
+Double-click any result row to jump directly to that location in the code view.
+
+## Finding references
+
+To find all cross-references to a function or variable, select it in the code view and open **Windows → Xrefs** (`Ctrl+X`). Malimite determines whether the selected identifier is a function or a local variable and shows the appropriate references dialog:
+
+- **Function references** — shows a table of **Type**, **Source**, **Target**, and **Line** for each call site.
+- **Variable references** — shows **Type**, **Variable**, **Function**, and **Line** for each usage, along with the variable's inferred type.
+
+Double-click a row in either dialog to navigate to that location.
+
+## Viewing entrypoints
+
+Open **Windows → Entrypoints** to see a table of all standard iOS/macOS lifecycle methods found in the binary. Malimite scans every class for known entrypoint function names such as `application:didFinishLaunchingWithOptions:`, `viewDidLoad`, `main`, scene lifecycle methods, and remote notification handlers.
+
+The results are sorted by class name and then function name. Double-click a row to navigate to that function.
+
+## Resources tab
+
+The **Files** tree includes the full bundle contents. Two resource types receive special handling:
+
+- **Info.plist** — Malimite automatically selects this file when the analysis window opens. Both binary and XML plist formats are supported; binary plists are decoded before display.
+- **embedded.mobileprovision** — selecting this file in the tree decodes the CMS-signed provisioning profile and displays the embedded XML plist, showing entitlements, provisioning certificates, and device UDIDs in a readable format.
+
+## Recent projects
+
+Previously analyzed projects are listed in the **Recent Projects** section of the main window. Click any entry to reopen that project without rerunning the full Ghidra analysis, as long as the project directory still exists alongside the original file.
+
+<Note>
+Reopening a recent project skips Ghidra reanalysis and loads the previously stored decompilation results from the project's SQLite database.
+</Note>

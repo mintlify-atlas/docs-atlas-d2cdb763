@@ -1,0 +1,94 @@
+---
+title: "Supported formats"
+description: "File formats and binary types that Malimite can open and analyze."
+---
+
+Malimite accepts iOS and macOS application packages and the Mach-O executables they contain. You can open a file by clicking **Select File** on the home screen, dragging and dropping onto the window, or reopening a recent project.
+
+## Input file types
+
+<Tabs>
+  <Tab title="IPA files">
+    An IPA file (`.ipa`) is a ZIP archive that holds an iOS application. Malimite extracts the archive, locates the `Payload/*.app` bundle inside, reads `Info.plist` to find the main executable name, and then loads that Mach-O binary for analysis.
+
+    **What Malimite reads from an IPA:**
+
+    | Resource | How it is parsed |
+    |---|---|
+    | `Payload/<App>.app/<Executable>` | Mach-O binary, passed to Ghidra for decompilation |
+    | `Info.plist` | Binary and XML formats via the dd-plist library; `CFBundleExecutable` and `CFBundleIdentifier` are extracted |
+    | `embedded.mobileprovision` | CMS-signed file decoded with BouncyCastle; embedded XML plist is displayed |
+    | Asset catalogs and other bundle resources | Listed in the file tree for inspection |
+
+    <Note>
+      Malimite treats IPA files as ZIP archives internally. If the archive is malformed or the `Payload/` directory structure is missing, the file may not load correctly.
+    </Note>
+  </Tab>
+  <Tab title="App bundles">
+    An app bundle (`.app`) is a macOS or iOS application directory. Malimite reads it directly from disk without extracting anything, using the same Info.plist lookup to find the executable.
+
+    **When to use this format:**
+
+    - Analyzing a macOS application installed on your system
+    - Working with an app bundle you have already extracted from an IPA
+    - Testing a locally built application before distribution
+
+    The analysis process is identical to IPA analysis once the executable is located.
+  </Tab>
+</Tabs>
+
+## Mach-O binary formats
+
+Malimite passes the located executable to Ghidra's headless analyzer. Before doing so, it reads the Mach-O header to determine the binary type.
+
+### Single-architecture binaries
+
+A standard Mach-O file contains code for one CPU architecture. Malimite detects it by reading the magic number at the start of the file and passes it directly to Ghidra.
+
+### Universal (fat) binaries
+
+A universal binary (fat Mach-O) bundles multiple architecture slices in a single file. Malimite identifies universal binaries using the Mach-O magic numbers:
+
+| Magic number | Description |
+|---|---|
+| `0xcafebabe` | Universal binary (big-endian header) |
+| `0xbebafeca` | Universal binary (little-endian / CIGAM byte-swapped header) |
+
+When a universal binary is detected, Malimite displays an architecture selection dialog listing all slices found in the file. Select the architecture you want to analyze and Malimite extracts that slice before passing it to Ghidra.
+
+## Supported architectures
+
+| Architecture | CPU type constant | Typical use |
+|---|---|---|
+| Intel x86 | `0x00000007` | 32-bit macOS applications |
+| Intel x86_64 | `0x01000007` | 64-bit macOS, Intel Mac apps |
+| ARM | `0x0000000C` | 32-bit iOS (ARMv7, legacy devices) |
+| ARM64 | `0x0100000C` | Apple Silicon Macs, iPhone, iPad |
+
+<Note>
+  Most modern iOS apps target ARM64 only. macOS apps distributed via the App Store may include both ARM64 (Apple Silicon) and x86_64 (Intel) slices in a universal binary.
+</Note>
+
+## Language support
+
+### Swift
+
+Malimite detects Swift binaries by scanning for runtime markers in the binary content: `Swift Runtime`, `SwiftCore`, `_swift_`, and the `_$s` name-mangling prefix. When a binary is detected as Swift, Malimite demangles mangled symbol names using its built-in `DemangleSwift` parser.
+
+The demangler handles names that start with the `_$s` prefix — the standard Swift ABI mangling scheme — and reconstructs the class name and method name from the encoded length-prefixed segments.
+
+### Objective-C
+
+For Objective-C binaries, Ghidra's built-in Objective-C analyzer reconstructs class hierarchies, method selectors, and instance variable layouts. The results are stored in Malimite's local SQLite project database and displayed in the class tree.
+
+## Decoded resources
+
+Malimite automatically decodes Apple-specific resource formats found inside the bundle:
+
+| Resource | Format | Parser |
+|---|---|---|
+| `Info.plist` | Binary plist or XML plist | dd-plist (`PropertyListParser`) |
+| `embedded.mobileprovision` | CMS-signed envelope containing an XML plist | BouncyCastle (`CMSSignedData`) |
+| Other bundle files | Raw bytes | Listed in the file tree; viewable as text |
+
+Binary plists are detected by checking for the `bplist` magic bytes. Both binary and XML plists are fully parsed and displayed as readable XML in the analysis view.

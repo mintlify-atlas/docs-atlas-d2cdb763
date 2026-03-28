@@ -1,0 +1,173 @@
+---
+title: "Installation"
+description: "Install Malimite and configure Ghidra as the decompilation backend."
+---
+
+## Prerequisites
+
+Before installing Malimite, make sure the following are available on your system:
+
+- **Java 11 or later** — Malimite is a Java application and requires JDK or JRE 11+. Confirm your version by running `java -version`.
+- **Ghidra** — Malimite uses Ghidra's headless analyzer as its decompilation backend. Download Ghidra from [ghidra-sre.org](https://ghidra-sre.org/).
+
+<Note>
+  On macOS, you can install both Java and Ghidra via Homebrew:
+
+  ```bash
+  brew install --cask ghidra
+  ```
+
+  Ghidra is listed as a recommended dependency in the Malimite Homebrew cask.
+</Note>
+
+## Install Malimite
+
+<Tabs>
+  <Tab title="Homebrew">
+    <Steps>
+      <Step title="Install the cask">
+        Run the following command to install Malimite via Homebrew:
+
+        ```bash
+        brew install --cask malimite
+        ```
+
+        Homebrew downloads the precompiled JAR, places it under `$(brew --prefix)/libexec/malimite/`, and creates a `malimite` wrapper script in `$(brew --prefix)/bin/` that runs the JAR with `java -jar`.
+      </Step>
+      <Step title="Launch Malimite">
+        Run the wrapper script from your terminal:
+
+        ```bash
+        malimite
+        ```
+
+        The main window opens. Continue to [set the Ghidra path](#set-the-ghidra-path) before running your first analysis.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Manual JAR">
+    <Steps>
+      <Step title="Download the JAR">
+        Go to the [Malimite Releases page](https://github.com/LaurieWired/Malimite/releases) and download the latest `.jar` file (for example, `Malimite-1-1.jar`).
+      </Step>
+      <Step title="Run the JAR">
+        Launch Malimite directly with `java -jar`:
+
+        ```bash
+        java -jar Malimite-1-1.jar
+        ```
+
+        Replace `Malimite-1-1.jar` with the filename of the version you downloaded.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="From source">
+    <Steps>
+      <Step title="Clone the repository">
+        ```bash
+        git clone https://github.com/LaurieWired/Malimite.git
+        cd Malimite
+        ```
+      </Step>
+      <Step title="Build with Maven">
+        Malimite uses the Maven Shade plugin to produce a single fat JAR. Run:
+
+        ```bash
+        mvn package
+        ```
+
+        The build generates `target/malimite-1.0-SNAPSHOT.jar` (the shaded JAR containing all dependencies).
+      </Step>
+      <Step title="Run the built JAR">
+        ```bash
+        java -jar target/malimite-1.0-SNAPSHOT.jar
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Set the Ghidra path
+
+Malimite requires a Ghidra installation path before it can analyze any file. It uses this path to locate `support/analyzeHeadless` (or `support/analyzeHeadless.bat` on Windows) and invoke it as a subprocess.
+
+<Steps>
+  <Step title="Open Preferences">
+    In the Malimite menu bar, go to **File → Preferences** (on macOS, **Malimite → Preferences**).
+  </Step>
+  <Step title="Set the Ghidra installation directory">
+    In the **Ghidra Path** field, enter or browse to the root of your Ghidra installation — the directory that contains the `support/` folder. For example:
+
+    - macOS (Homebrew): `/opt/homebrew/Caskroom/ghidra/<version>/ghidra_<version>_PUBLIC`
+    - Manual install: `/path/to/ghidra_11.x.x_PUBLIC`
+  </Step>
+  <Step title="Save">
+    Click **Save**. Malimite writes the path to `malimite.properties` in the working directory and validates that `analyzeHeadless` is reachable. If the path requires elevated permissions to write the required JSON library into Ghidra's `patch/` directory, Malimite prompts you to retry with admin privileges.
+  </Step>
+</Steps>
+
+<Warning>
+  If the Ghidra path is not set when you click **Analyze File**, Malimite shows a warning and opens the Preferences dialog automatically. Analysis cannot proceed without a valid Ghidra path.
+</Warning>
+
+## Verify the installation
+
+After setting the Ghidra path, confirm everything is working:
+
+1. Click **Select File** or drag an `.ipa` or `.app` bundle onto the file path field.
+2. Click **Analyze File**.
+3. Malimite launches Ghidra's headless analyzer in the background. A progress indicator appears while the analysis runs.
+4. Once complete, the class tree and decompiled code view populate with results from the binary.
+
+If the analysis window opens and the class tree is populated, your installation is working correctly.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Ghidra path not set or not found">
+    Malimite looks for `support/analyzeHeadless` (or `support/analyzeHeadless.bat` on Windows) relative to the path you configured. Make sure you selected the **root** of the Ghidra installation directory — not the `support/` subfolder itself, and not a parent directory above the Ghidra release folder.
+
+    To verify the path is correct, check that the file exists:
+
+    ```bash
+    ls /your/ghidra/path/support/analyzeHeadless
+    ```
+  </Accordion>
+  <Accordion title="Java version error on launch">
+    Malimite requires Java 11 or later. If you see an `UnsupportedClassVersionError` or similar error, check your active Java version:
+
+    ```bash
+    java -version
+    ```
+
+    If the version is below 11, install a supported JDK. On macOS:
+
+    ```bash
+    brew install openjdk@21
+    ```
+
+    If multiple Java versions are installed, make sure the `java` on your `PATH` is version 11 or later. You can also launch the JAR explicitly with a full JDK path:
+
+    ```bash
+    /path/to/java11+/bin/java -jar Malimite-1-1.jar
+    ```
+  </Accordion>
+  <Accordion title="Ghidra library setup fails with a permissions error">
+    When you first set a Ghidra path, Malimite attempts to download a required JSON library into the Ghidra `Ghidra/patch/` directory. If that directory is not writable by your user, Malimite prompts you to retry with admin privileges using `sudo`.
+
+    If you decline the prompt or the `sudo` attempt also fails, you can install the library manually. Download the JAR from Maven Central and place it in `<ghidra-root>/Ghidra/patch/`:
+
+    ```bash
+    curl -o json-20210307.jar \
+      https://repo1.maven.org/maven2/org/json/json/20210307/json-20210307.jar
+    sudo cp json-20210307.jar /your/ghidra/path/Ghidra/patch/
+    ```
+  </Accordion>
+  <Accordion title="The Malimite window opens but analysis never completes">
+    Malimite communicates with the Ghidra script over a local socket. Check that:
+
+    - No firewall or security policy is blocking loopback connections on the dynamically assigned port.
+    - Ghidra itself is functional — try opening the same binary in the Ghidra GUI to confirm Ghidra is not reporting errors.
+    - The binary is a supported format (Mach-O ARM64 or x86_64). See [Supported formats](/reference/supported-formats) for details.
+  </Accordion>
+</AccordionGroup>

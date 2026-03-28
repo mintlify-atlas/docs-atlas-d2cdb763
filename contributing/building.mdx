@@ -1,0 +1,99 @@
+---
+title: "Building from source"
+description: "How to build Malimite from source using Maven"
+---
+
+Malimite uses a standard Maven build. The build generates the ANTLR parser sources and produces a single self-contained JAR with all dependencies bundled.
+
+## Prerequisites
+
+- **Java 11 or later** — the project targets Java 11 (`maven.compiler.source=11`, `maven.compiler.target=11`)
+- **Maven 3.x** — used to compile, generate sources, and package the application
+- **Ghidra** — required to run the tool after building; Malimite calls Ghidra's `analyzeHeadless` during analysis
+
+## Build steps
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/LaurieWired/Malimite.git
+    ```
+  </Step>
+  <Step title="Navigate to the project directory">
+    ```bash
+    cd Malimite
+    ```
+  </Step>
+  <Step title="Build with Maven">
+    ```bash
+    mvn package
+    ```
+
+    This runs two key phases automatically:
+
+    1. **Source generation** — `antlr4-maven-plugin` reads `CPP14Lexer.g4` and `CPP14Parser.g4` from `src/main/antlr4/` and writes the generated Java sources to `src/main/java/com/lauriewired/malimite/decompile/antlr/`.
+    2. **Packaging** — `maven-shade-plugin` compiles all classes and bundles every dependency into a single shaded JAR at `target/malimite-1.0-SNAPSHOT.jar`.
+  </Step>
+  <Step title="Run the built JAR">
+    ```bash
+    java -jar target/malimite-1.0-SNAPSHOT.jar
+    ```
+
+    <Note>
+      The shade plugin sets the manifest `Main-Class` to `com.lauriewired.malimite.Malimite`, so no `-cp` flag or explicit class name is needed.
+    </Note>
+  </Step>
+</Steps>
+
+## Maven plugins
+
+| Plugin | Version | Role |
+|---|---|---|
+| `antlr4-maven-plugin` | 4.13.1 | Generates `CPP14Lexer` and `CPP14Parser` Java sources from the ANTLR grammars during the `generate-sources` phase |
+| `build-helper-maven-plugin` | 3.3.0 | Adds the ANTLR output directory to the compile source root so the generated classes are picked up by the compiler |
+| `maven-compiler-plugin` | 3.13.0 | Compiles all Java sources targeting Java 11 (`--release 11`) |
+| `maven-shade-plugin` | 3.5.0 | Creates an uber-JAR with all dependencies merged; excludes signature files (`META-INF/*.SF`, `*.DSA`, `*.RSA`) to prevent security exceptions at runtime |
+
+## Key dependencies
+
+| Dependency | Version | Purpose |
+|---|---|---|
+| `dd-plist` | 1.27 | Apple binary and XML plist parsing |
+| `gson` | 2.10.1 | JSON serialization and deserialization |
+| `sqlite-jdbc` | 3.44.1.0 | Local SQLite project database |
+| `org.json` | 20231013 | JSON object construction (used in the Ghidra bridge) |
+| `antlr4-runtime` | 4.13.1 | Runtime support for the generated CPP14 lexer/parser |
+| `rsyntaxtextarea` | 3.4.0 | Syntax-highlighting code editor component |
+| `flatlaf` | 3.5.2 | Modern flat look and feel for the Swing UI |
+| `bcprov-jdk15on` | 1.70 | BouncyCastle cryptographic provider for provisioning profile decoding |
+| `bcpkix-jdk15on` | 1.70 | BouncyCastle PKIX/CMS support for key handling |
+| `flexmark-all` | 0.64.8 | Markdown rendering for AI-generated responses in the UI |
+
+## The DecompilerBridge
+
+`DecompilerBridge/ghidra/DumpClassData.java` is a **Ghidra headless script**, not a standard Java class. It is not compiled by Maven and does not appear in the shaded JAR.
+
+Malimite invokes it by passing its path to Ghidra's `analyzeHeadless` command-line tool. Ghidra compiles and runs the script in its own runtime environment, communicating results back to Malimite over a local socket connection.
+
+<Warning>
+  Do not move or rename `DumpClassData.java` without updating the path that Malimite uses to locate it. `GhidraProject.java` resolves the script directory at runtime as `<user.dir>/DecompilerBridge/ghidra`, so the file must remain at that relative path from wherever the JAR is launched.
+</Warning>
+
+## IDE setup
+
+The project follows a standard Maven layout and imports cleanly into IntelliJ IDEA and Eclipse.
+
+**IntelliJ IDEA:**
+
+1. Open the repository root as a Maven project (File → Open → select `pom.xml`).
+2. IntelliJ will download dependencies and index the project automatically.
+3. Run `com.lauriewired.malimite.Malimite` directly from the IDE.
+
+**Eclipse:**
+
+1. Use File → Import → Existing Maven Projects and point it at the repository root.
+2. Eclipse will configure the build path from `pom.xml`.
+
+<Tip>
+  The first build may take a few minutes while Maven downloads dependencies and ANTLR generates the parser sources. Subsequent builds are significantly faster.
+</Tip>

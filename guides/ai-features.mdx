@@ -1,0 +1,143 @@
+---
+title: "AI features"
+description: "Using LLM integration for code translation, summarization, and vulnerability analysis."
+---
+
+Malimite integrates with large language models to help you make sense of decompiled code. Three built-in AI actions are available from the **Function Assist** panel in the analysis window: **Auto Fix**, **Summarize**, and **Find Vulnerabilities**.
+
+## Overview of AI actions
+
+| Action | What it does |
+|---|---|
+| **Auto Fix** | Translates decompiled functions back into idiomatic Swift or Objective-C |
+| **Summarize** | Describes what the selected functions do and identifies known library patterns |
+| **Find Vulnerabilities** | Performs a security analysis and identifies exploitable issues |
+
+Each action sends the decompiled code for the selected functions to the configured model along with a tailored prompt.
+
+### Auto Fix
+
+Auto Fix translates decompiled output back to readable source code. Malimite detects whether the binary was compiled from Swift or Objective-C by scanning for Swift runtime markers (`_swift_`, `_$s`, `SwiftCore`, `Swift Runtime`) in the Mach-O binary, then targets that language automatically.
+
+The prompt instructs the model to:
+- Preserve method names and global variables exactly
+- Adjust local variable names for readability
+- Return only the translated functions — no additional methods or global definitions
+- Wrap each function with `BEGIN_FUNCTION` / `END_FUNCTION` markers so the result can be written back into the editor
+
+The translated code replaces the content in the right panel for each processed function.
+
+### Summarize
+
+Summarize asks the model to describe what the selected functions do, highlight key functionality, note any notable patterns, and identify whether the code belongs to a well-known library. The response is formatted in **markdown** and displayed in a dialog.
+
+### Find Vulnerabilities
+
+Find Vulnerabilities asks the model to analyze the selected functions for security issues. The prompt instructs the model to consider:
+
+- Memory safety problems
+- Input validation weaknesses
+- Authentication bypass possibilities
+- Common coding pitfalls
+
+Because the input is decompiled code, the model is explicitly told to ignore style issues such as magic numbers, hardcoded values, and readability concerns. The response identifies each issue, explains how it could be exploited, and is formatted in markdown with a clear header per issue. Results appear in a dialog.
+
+<Warning>
+AI analysis of decompiled code may produce inaccurate results. Treat output as a starting point for manual review, not a definitive finding.
+</Warning>
+
+## Supported models
+
+<Tabs>
+  <Tab title="OpenAI">
+    Malimite supports the following OpenAI models:
+
+    | Display name | Model ID |
+    |---|---|
+    | OpenAI GPT-4 Turbo | `gpt-4-turbo` |
+    | OpenAI GPT-4 Mini | `gpt-4-mini` |
+
+    GPT-4 Turbo is the default model.
+
+    Requests are sent to `https://api.openai.com/v1/chat/completions` using the standard chat completions API.
+
+    <Note>
+    Processing large binaries with many functions can consume a significant number of tokens. Consider selecting only the functions most relevant to your analysis to manage API costs.
+    </Note>
+  </Tab>
+  <Tab title="Local model">
+    Malimite can send requests to a locally running inference server. The following endpoints are recognized and use the chat completions format automatically:
+
+    | Server | Default URL |
+    |---|---|
+    | LM Studio | `http://localhost:1234` |
+    | Text Generation WebUI | `http://localhost:5000` |
+    | Ollama | `http://localhost:8080` |
+
+    Any other URL will use a simple completion format instead of the chat format.
+
+    Configure the URL in **Preferences → Local Model URL**.
+  </Tab>
+</Tabs>
+
+## Setting up API keys
+
+<Steps>
+  <Step title="Open Preferences">
+    Go to **File → Preferences** (`Ctrl+,`).
+  </Step>
+  <Step title="Enter your API key">
+    Paste your OpenAI API key into the **OpenAI API Key** field. Keys are encrypted before being written to disk using Malimite's built-in key encryption.
+  </Step>
+  <Step title="Save and close">
+    Close Preferences. The key is stored immediately.
+  </Step>
+</Steps>
+
+<Warning>
+API keys are stored encrypted in `malimite.properties` on disk. Never share this file or check it into version control.
+</Warning>
+
+## Setting up a local model
+
+<Steps>
+  <Step title="Start your local inference server">
+    Launch LM Studio, Text Generation WebUI, Ollama, or another OpenAI-compatible server and load a model.
+  </Step>
+  <Step title="Open Preferences">
+    Go to **File → Preferences** (`Ctrl+,`).
+  </Step>
+  <Step title="Set the Local Model URL">
+    Enter the full URL of your server's completion endpoint in the **Local Model URL** field (for example, `http://localhost:1234`).
+  </Step>
+  <Step title="Save and close">
+    Close Preferences. Malimite will route requests to your local server when **Local Model** is selected.
+  </Step>
+</Steps>
+
+## Running an AI action
+
+<Steps>
+  <Step title="Select a class in the tree">
+    Click a class node in the **Classes** tree. The **Function Assist** panel on the right populates with the functions belonging to that class.
+  </Step>
+  <Step title="Select functions">
+    Check individual functions in the function list, or use **Select All** to include every function in the class. You must select at least one function before executing.
+  </Step>
+  <Step title="Choose a model">
+    Use the **Model** dropdown to select the model you want to use.
+  </Step>
+  <Step title="Choose an action">
+    Use the action dropdown to select **Auto Fix**, **Summarize**, or **Find Vulnerabilities**.
+  </Step>
+  <Step title="Execute">
+    Click **Execute**. A confirmation dialog shows which functions will be sent and to which model.
+
+    - Click **Confirm** to send the request immediately.
+    - Click **Edit Prompt** to review and modify the assembled prompt before sending.
+  </Step>
+  <Step title="Review results">
+    - **Auto Fix** — the translated code is written back into the analysis window.
+    - **Summarize** and **Find Vulnerabilities** — results appear in a separate dialog formatted in markdown.
+  </Step>
+</Steps>

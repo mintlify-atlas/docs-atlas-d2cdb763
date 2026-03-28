@@ -1,0 +1,64 @@
+{
+  "projectType": "general",
+  "projectName": "Malimite",
+  "projectDescription": "An iOS and macOS decompiler built on Ghidra that supports Swift, Objective-C, and Apple resource decoding with built-in LLM-assisted analysis.",
+  "theme": "aspen",
+  "primaryColor": "#94cb04",
+  "lightColor": "#545454",
+  "darkColor": null,
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": ["introduction", "installation"]
+      },
+      {
+        "group": "Using Malimite",
+        "pages": [
+          "guides/analyzing-apps",
+          "guides/ai-features",
+          "guides/library-management"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/configuration",
+          "reference/supported-formats",
+          "reference/keyboard-shortcuts"
+        ]
+      },
+      {
+        "group": "Contributing",
+        "pages": [
+          "contributing/overview",
+          "contributing/building"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Decompiles IPA files and macOS Application Bundles",
+    "Built on Ghidra for Swift and Objective-C support",
+    "Auto-decodes iOS resources (plists, assets, provisioning profiles)",
+    "Reconstructs Swift class hierarchies from mangled symbols",
+    "Built-in LLM method translation (OpenAI, local models)",
+    "AI-powered vulnerability analysis and code summarization",
+    "Library filtering to skip known Apple framework code",
+    "Cross-platform: Mac, Windows, Linux",
+    "Universal Mach-O binary support with architecture selection",
+    "SQLite-backed project persistence with recent projects"
+  ],
+  "publicApiSurface": [
+    "Malimite.main(String[] args) — application entry point",
+    "AnalysisWindow.show(File file, Config config) — open analysis view",
+    "GhidraProject.decompileMacho(...) — run headless Ghidra decompilation",
+    "AIBackend.sendToModel(provider, modelId, inputText, config) — LLM query",
+    "AIBackend.getPromptForAction(action, functionCode) — built-in prompts",
+    "Config.setGhidraPath(String) / getGhidraPath() — Ghidra configuration",
+    "Config.setOpenAIApiKey(String) — encrypted API key storage",
+    "DemangleSwift.demangleSwiftName(String) — Swift symbol demangling",
+    "LibraryDefinitions.getActiveLibraries(Config) — library filter list",
+    "SQLiteDBHandler — project database (classes, functions, strings, references)"
+  ]
+}

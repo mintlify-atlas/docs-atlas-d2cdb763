@@ -1,0 +1,83 @@
+---
+title: "Configuration reference"
+description: "All configuration options available in Malimite, stored in malimite.properties."
+---
+
+Malimite stores its configuration in a file named `malimite.properties` in the working directory from which the application is launched. The file is created automatically on first run and updated whenever you save changes in the Preferences dialog.
+
+## Accessing preferences
+
+Open the Preferences dialog from the menu bar:
+
+- **Windows / Linux:** **File → Preferences...**
+- **macOS:** **Malimite → Preferences...**
+
+Changes take effect immediately after clicking **Save**. Theme changes are applied to all open windows without requiring a restart.
+
+## Configuration options
+
+<ParamField path="ghidra.path" type="string" required>
+  Absolute path to your Ghidra installation directory — the folder that contains `support/analyzeHeadless`. Malimite cannot run analysis without this value set. You can browse for the directory using the **Browse** button in the Preferences dialog.
+</ParamField>
+
+<ParamField path="app.theme" type="string" default="dark">
+  UI theme. Accepted values are `dark` and `light`. Malimite uses [FlatLaf](https://www.formdev.com/flatlaf/) (`FlatDarkLaf` / `FlatLightLaf`) to apply the theme across all windows. If this key is absent from the file, Malimite defaults to `dark` and writes the value on startup.
+</ParamField>
+
+<ParamField path="openai.api.key.encrypted" type="string">
+  Encrypted OpenAI API key used for AI-assisted analysis features. The key is encrypted with BouncyCastle before being written to disk — you should never edit this value by hand. Enter your raw API key in the **OpenAI API Key** field in the Preferences dialog; Malimite encrypts it automatically on save.
+</ParamField>
+
+<ParamField path="claude.api.key.encrypted" type="string">
+  Encrypted Anthropic Claude API key. Stored and encrypted the same way as the OpenAI key. This option is present in the configuration layer but is not yet exposed in the Preferences dialog UI.
+</ParamField>
+
+<ParamField path="local.model.url" type="string" default="http://localhost:1234/v1/chat/completions">
+  Endpoint URL for a locally hosted LLM that exposes an OpenAI-compatible `/v1/chat/completions` API (for example, LM Studio). Change this in the **Local Model URL** field in the Preferences dialog.
+</ParamField>
+
+<ParamField path="projects.list" type="string">
+  Pipe-delimited (`|`) list of recently opened project file paths. Malimite populates this automatically each time you open a file. The paths appear as clickable entries in the **Recent Projects** panel on the home screen.
+
+  Example: `/Users/me/apps/MyApp.ipa|/Users/me/apps/OtherApp.ipa`
+</ParamField>
+
+<ParamField path="libraries.added" type="string">
+  Pipe-delimited list of user-added library name prefixes. These prefixes are treated as third-party or system libraries and filtered from the decompiled class tree. Managed via **File → Configure Libraries**.
+
+  Example: `com.myframework|io.customlib`
+</ParamField>
+
+<ParamField path="libraries.removed" type="string">
+  Pipe-delimited list of default library prefixes that have been removed from the built-in filter list. When you un-filter a default Apple framework, its prefix is recorded here so that Malimite knows to show it in future sessions. Managed via **File → Configure Libraries**.
+</ParamField>
+
+<ParamField path="os.type" type="string">
+  Detected operating system name, written automatically from `System.getProperty("os.name")`. Used internally to adjust platform-specific behavior such as macOS menu bar integration. You should not edit this value manually.
+</ParamField>
+
+## API key encryption
+
+<Note>
+  API keys are encrypted using BouncyCastle before being written to `malimite.properties`. Never paste an encrypted value from another machine — the encryption is tied to the local environment. Always enter raw keys through the Preferences dialog.
+</Note>
+
+When you save an API key through the Preferences dialog, Malimite calls `KeyEncryption.encrypt()` and stores only the ciphertext. The raw key is never written to disk. When the AI features read the key, they decrypt it in memory on demand.
+
+## Example malimite.properties file
+
+```properties malimite.properties
+#Malimite Configuration
+app.theme=dark
+ghidra.path=/Applications/ghidra_11.1_PUBLIC
+openai.api.key.encrypted=<encrypted-value>
+local.model.url=http\://localhost\:1234/v1/chat/completions
+projects.list=/Users/me/apps/MyApp.ipa
+libraries.added=io.customlib
+libraries.removed=
+os.type=mac os x
+```
+
+<Warning>
+  Java's `Properties` file format escapes colons and backslashes. If you edit `malimite.properties` by hand, ensure URLs use `\:` for colons and `\\` for backslashes, or let the Preferences dialog manage the file for you.
+</Warning>

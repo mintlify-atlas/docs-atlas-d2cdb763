@@ -1,0 +1,58 @@
+---
+title: "Contributing"
+description: "How to contribute to the Malimite project"
+---
+
+Contributions to Malimite are greatly appreciated and help make it a more powerful and versatile tool for the iOS and macOS reverse engineering community. Whether you write code, file issues, or spread the word, every contribution matters.
+
+## Ways to contribute
+
+<CardGroup cols={2}>
+  <Card title="Submit a pull request" icon="code-pull-request" href="https://github.com/LaurieWired/Malimite">
+    Fork the repository, make your changes, and open a pull request against the main branch.
+  </Card>
+  <Card title="Report a bug or issue" icon="bug" href="https://github.com/LaurieWired/Malimite/issues">
+    Found something broken? Open an issue on GitHub with steps to reproduce and details about your environment.
+  </Card>
+  <Card title="Suggest an improvement" icon="lightbulb" href="https://github.com/LaurieWired/Malimite/issues">
+    Have an idea for a new feature or a better way to do something? Open a GitHub issue to start the discussion.
+  </Card>
+  <Card title="Share the project" icon="star" href="https://github.com/LaurieWired/Malimite">
+    Star the repository on GitHub or share it with others in the reverse engineering community.
+  </Card>
+  <Card title="Add examples to the Wiki" icon="book" href="https://github.com/LaurieWired/Malimite/wiki">
+    Document real-world usage, add walkthroughs, or expand the existing Wiki with examples.
+  </Card>
+</CardGroup>
+
+## Project structure
+
+The source tree is organized by concern. Understanding the layout will help you find the right place to make changes.
+
+### Main Java source — `src/main/java/com/lauriewired/malimite/`
+
+| Package | Files | Purpose |
+|---|---|---|
+| `ui/` | Swing components | All user interface panels, windows, and dialogs |
+| `decompile/` | `GhidraProject.java`, `DemangleSwift.java`, `DynamicDecompile.java`, `SyntaxParser.java` | Ghidra integration, Swift demangling, and C++ syntax parsing |
+| `configuration/` | `Config.java`, `Project.java`, `LibraryDefinitions.java` | Application settings, open project state, and library name lists |
+| `files/` | `Macho.java`, `InfoPlist.java`, `MobileProvision.java` | Mach-O binary parsing, Info.plist decoding, and provisioning profile handling |
+| `tools/` | `AIBackend.java`, `RuntimeMethodHandler.java` | LLM integration and runtime method name resolution |
+| `database/` | `SQLiteDBHandler.java` | Local SQLite project database |
+| `utils/` | `FileProcessing.java`, `GhidraSetup.java`, `NodeOperations.java`, `PlistUtils.java`, `ResourceParser.java` | File extraction helpers, Ghidra path setup, tree node operations, plist utilities, and resource decoding |
+
+### Headless Ghidra script — `DecompilerBridge/ghidra/`
+
+`DumpClassData.java` is a Ghidra headless script that is invoked by Ghidra's `analyzeHeadless` tool at analysis time. It is **not** compiled by Maven — Ghidra loads it directly at runtime.
+
+### ANTLR grammar — `src/main/antlr4/`
+
+`CPP14Lexer.g4` and `CPP14Parser.g4` define the grammar used to parse Ghidra's C++ decompiler output. The `antlr4-maven-plugin` generates the corresponding Java lexer and parser classes into `src/main/java/com/lauriewired/malimite/decompile/antlr/` during the build.
+
+## Code of conduct
+
+- Be respectful in all interactions — issues, pull requests, and discussions.
+- Focus on improvement: constructive criticism and honest feedback are welcome.
+- Follow the existing code style and conventions when submitting changes.
+
+Malimite is licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).

@@ -1,0 +1,55 @@
+---
+title: "Keyboard shortcuts"
+description: "Keyboard shortcuts for navigating and using Malimite."
+---
+
+<Note>
+  On macOS, Malimite uses the native screen menu bar. Shortcuts that use **Ctrl** on Windows and Linux use **Cmd** on macOS for menu accelerators. The **x** key shortcut in the code viewer works the same on all platforms.
+</Note>
+
+## Navigation
+
+| Action | Windows / Linux | macOS | Description |
+|---|---|---|---|
+| Search | Ctrl+F | Cmd+F | Toggle the in-file search bar in the code viewer to find and step through text matches in the current file |
+| Search in code | Ctrl+H | Ctrl+H | Open a dialog to search for a variable, method, or class name across all decompiled code |
+| Right panel | Ctrl+L | Cmd+L | Toggle the right-side panel |
+| Xrefs | Ctrl+X | Ctrl+X | Show cross-references for the symbol under the cursor in the current function |
+| Expand all | Ctrl+E | Ctrl+E | Expand all nodes in the file tree |
+| Collapse all | Ctrl+C | Ctrl+C | Collapse all nodes in the file tree |
+| Close window | Ctrl+W | Ctrl+W | Close the current analysis window |
+
+## Code viewer
+
+| Action | Key | Description |
+|---|---|---|
+| Show references | x | With a word selected (or the cursor on a word) in the code viewer, shows all references to that symbol within the current class context. Works on variables, method names, and class names. |
+
+<Tip>
+  You do not need to select text before pressing **x**. If nothing is selected, Malimite reads the word at the cursor position automatically.
+</Tip>
+
+## File editing
+
+| Action | Windows / Linux | macOS | Description |
+|---|---|---|---|
+| Edit function | Ctrl+E | Ctrl+E | Start editing the currently selected function. A function node must be selected in the **Classes** tree (not a class node) for this to activate. |
+
+<Info>
+  **Ctrl+E** is registered for both **Expand All** (View menu) and **Edit Function** (File menu). Which action fires depends on which menu item receives focus first. Use the right-click context menu on a function node as a reliable alternative for editing.
+</Info>
+
+## View
+
+| Action | Windows / Linux | macOS | Description |
+|---|---|---|---|
+| Zoom in | Ctrl+= | Ctrl+= | Increase font size in the code viewer |
+| Zoom out | Ctrl+- | Ctrl+- | Decrease font size in the code viewer |
+| Reset zoom | Ctrl+0 | Ctrl+0 | Restore the default font size in the code viewer |
+| Line wrap | Alt+W | Alt+W | Toggle line wrapping in the code viewer |
+
+## Application
+
+| Action | Windows / Linux | macOS | Description |
+|---|---|---|---|
+| Preferences | Ctrl+, | Cmd+, | Open the Preferences dialog |

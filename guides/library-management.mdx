@@ -1,0 +1,95 @@
+---
+title: "Library management"
+description: "Managing the list of Apple frameworks filtered from decompilation."
+---
+
+When Malimite analyzes an app, it decompiles classes found in the Mach-O executable. Many of those classes belong to Apple system frameworks — UIKit, Foundation, CoreData, and so on — rather than the app's own code. Decompiling them produces a large volume of output that makes it harder to focus on what matters.
+
+Library filtering addresses this: any class whose name starts with a configured library prefix is grouped under a **Libraries** node in the **Classes** tree instead of being individually decompiled. This keeps the tree focused on app-specific code.
+
+## How filtering works
+
+During analysis, Malimite passes the active library list to Ghidra's `DumpClassData` script. The script matches each class name against the configured prefixes. Matching classes are assigned to the **Libraries** group in the database rather than being decompiled as standalone classes.
+
+In the analysis window's **Classes** tree, the **Libraries** node appears at the top and contains all filtered class names as children. They are still visible and navigable, but they do not trigger full decompilation.
+
+## Default libraries
+
+The following frameworks are filtered by default:
+
+<Accordion title="View all default libraries">
+
+| Framework |
+|---|
+| AppTrackingTransparency |
+| ARKit |
+| AuthenticationServices |
+| AVFoundation |
+| BackgroundTasks |
+| CallKit |
+| CFNetwork |
+| CloudKit |
+| Combine |
+| Contacts |
+| CoreBluetooth |
+| CoreData |
+| CoreFoundation |
+| CoreGraphics |
+| CoreImage |
+| CoreLocation |
+| CoreML |
+| CoreMotion |
+| CoreText |
+| FileProvider |
+| Foundation |
+| GameKit |
+| HealthKit |
+| HomeKit |
+| Intents |
+| MapKit |
+| MediaPlayer |
+| MessageUI |
+| Metal |
+| NaturalLanguage |
+| NetworkExtension |
+| PassKit |
+| Photos |
+| QuartzCore |
+| SceneKit |
+| Security |
+| SpriteKit |
+| StoreKit |
+| SwiftStandardLibrary |
+| SwiftUI |
+| SystemConfiguration |
+| TextKit |
+| UIKit |
+| UserNotifications |
+| Vision |
+| WebKit |
+
+</Accordion>
+
+## Managing the library list
+
+Open **File → Configure Libraries** to open the Library Config dialog. The dialog shows all currently active library prefixes — the defaults plus any you have added, minus any you have removed.
+
+### Adding a custom framework
+
+Click **Add**, enter the library prefix exactly as it appears at the start of the class names you want to filter (the match is case-sensitive), and confirm. The new entry appears in the list immediately.
+
+<Tip>
+Add prefixes for third-party libraries your target app uses — for example, `Alamofire`, `SDWebImage`, `RxSwift`, or `Firebase` — to remove their classes from the decompiled output and reduce noise.
+</Tip>
+
+### Removing a library
+
+Select one or more entries in the list and click **Remove**. Removed libraries are tracked separately from added ones, so restoring defaults later will bring them back.
+
+### Restoring defaults
+
+Click **Restore Defaults** to reset the library list to the original set of Apple frameworks. This discards any custom additions and re-enables any defaults you had removed.
+
+<Note>
+Changes to the library list take effect on the next analysis. Re-analyze the file to see updated filtering applied to the **Classes** tree.
+</Note>
